@@ -1,19 +1,30 @@
 CC = gcc
-CFLAGS = -g -Wall -std=c99
-PROGRAM = oss user
+CFLAGS = -g -Wall -pedantic
+TARGET1 = oss
+TARGET2 = user
 SRCS = oss.c user.c
-OBJS = $(SRCS: .c = .o)
+OBJS1 = oss.o
+OBJS2 = user.o
 .PHONY: all clean
-all: %(PROGRAM)
+all: $(TARGET1) $(TARGET2)
 
-$(PROGRAM): $(OBJS)
-	$(CC) $(CFLAGS) $^ -o $@
+$(TARGET1):	$(OBJS1)
+	$(CC) -o $(TARGET1) $(OBJS1)
+
+$(TARGET2):	$(OBJS2)
+	$(CC) -o $(TARGET2) $(OBJS2)
+
+oss.o: oss.c
+	$(CC) $(CFLAGS) -c oss.c
+
+user.o: user.c
+	$(CC) $(CFLAGS) -c user.c
 
 clean:
-	rm -f $(PROGRAM) $(OBJS)
+	/bin/rm -f *.o $(TARGET1) $(TARGET2)
 
 help:
 	@echo "Usage: make [all|clean|help]"
-	@echo "    all:    Build the $(PROGRAM) program"
+	@echo "    all:    Build the $(TARGET) TARGETS"
 	@echo "    clean:  Remove build artifacts"
 	@echo "    help:   Print this help message"
