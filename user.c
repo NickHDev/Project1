@@ -1,3 +1,8 @@
+/*
+Author: Nicholas Hieb
+Date: 02/01/2025
+This File is the secondary file and is the child process to be run.
+*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>

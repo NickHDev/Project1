@@ -1,3 +1,9 @@
+/*
+Author: Nicholas Hieb
+Date: 02/01/2025
+This File is the main file to be executed and runs child processes.
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -7,44 +13,45 @@
 
 int main(int argc, char *argv[])
 {
-    int proc;
-    int simul;
+    int proc = 1;
+    int simul = 1;
+    char *iter = NULL;
     int completedChilds = 0;
     int runningChilds = 0;
     int status;
-    char *iter = NULL;
-    
-    // Help Argument and how to use.
-    if (argc < 3 || (argc == 2 && strcmp(argv[1], "-h") == 0))
-    {
-        printf("Usage: %s [-h] [-n <number>] [-s <number>] [-t <number>]", argv[0]);
-        printf("Option: -h  \tPrints this help message.\n");
-        return 0;
-    }
+    int opt;
 
     // Command line arguments and parsing them for input.
-    for (int i = 1; i < argc; i++)
+    while ((opt = getopt(argc, argv, "hn:s:t:")) != -1)
     {
-        if (strcmp(argv[i], "-n") == 0)
+        switch (opt)
         {
-            proc = atoi(argv[++i]);
-        }
-        else if (strcmp(argv[i], "-s") == 0)
-        {
-            simul = atoi(argv[++i]);
-        }
-        else if (strcmp(argv[i], "-t") == 0)
-        {
-            iter = argv[++i];
+        case 'n':
+            proc = atoi(optarg);
+            break;
+        case 's':
+            simul = atoi(optarg);
+            break;
+        case 't':
+            iter = optarg;
+            break;
+        case 'h':
+        default:
+            printf("Usage: %s [-h] -n <number> -s <number> -t <number>\n", argv[0]);
+            printf("Options:\n");
+            printf("  -h\tPrints this help message.\n");
+            printf("  -n\tTotal number of processes to create.\n");
+            printf("  -s\tMaximum number of simultaneous processes.\n");
+            printf("  -t\tArgument to pass to the child process.\n");
+            return 0;
         }
     }
 
     // Loop to check for how many children have run.
-    while (completedChilds < proc)
+    for (completedChilds = 0; completedChilds < proc;)
     {
-        //printf("running childs: %d", runningChilds);
-        // Loop to Check for how many children are currently running.
-        while (runningChilds < simul && (completedChilds + runningChilds) < proc)
+        // Loop for running simultanious children.
+        for (int i = 0; i < simul && completedChilds < proc; i++)
         {
             pid_t childPid = fork();
             if (childPid == 0)
@@ -52,19 +59,18 @@ int main(int argc, char *argv[])
                 char *args[] = {"./user", iter, NULL};
                 execvp(args[0], args);
             }
+            else if (childPid > 0)
+            {
+                completedChilds++;
+            }
             else
             {
-                runningChilds++;
+                perror("Fork Failed");
+                EXIT_FAILURE;
             }
         }
+        wait(NULL);// Waiting for children to finish
     }
-    // Waiting for children to finish
-    pid_t finishedPid = wait(&status);
-    if (finishedPid > 0)
-    {
-        completedChilds++;
-        runningChilds--;
-    }
-
+    
     return EXIT_SUCCESS;
 }
